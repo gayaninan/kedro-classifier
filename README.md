@@ -1,125 +1,241 @@
-# iris_classifier
+# Iris Classifier Pipeline
+
+> *Note:* This project is an example of MLOps best practices using Kedro 1.x, demonstrating modular pipeline design and experiment tracking to follow key MLOps stages.
 
 ## Overview
 
-This is your new Kedro project, which was generated using `kedro 0.19.8`.
+This pipeline demonstrates a modular and reproducible machine learning workflow, following MLOps principles:
 
-Take a look at the [Kedro documentation](https://docs.kedro.org) to get started.
+1. **Feature Engineering:** Create and transform features (e.g., feature interactions, normalization).
+2. **Data Processing:** Split the data into training and testing sets using a configurable ratio from `conf/base/parameters.yml`.
+3. **Training:** Fit a logistic regression model using scikit-learn, logging parameters and metrics to MLflow and Weights & Biases (W&B).
+4. **Reporting:** Report model accuracy and log performance curves.
+5. **Monitoring:** Monitor data drift and statistics between train and test sets.
+6. **Retraining:** Optionally retrain the model with new data.
 
-## Getting Started
+## Pipeline Inputs
 
-To create a project based on this starter, ensure you have installed Kedro into a virtual environment. Then use the following command:
+### `iris_data`
 
-```sh
-pip install kedro
-kedro new --starter=databricks-iris
-```
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Raw iris data containing features and target column |
 
-After the project is created, navigate to the newly created project directory:
+### `parameters`
 
-```sh
-cd <my-project-name>  # change directory 
-```
+|      |                    |
+| ---- | ------------------ |
+| Type | `dict` |
+| Description | Project parameters: `train_fraction`, `random_state`, `target_column`, `n_epochs` |
 
-Install the required dependencies:
+## Pipeline Intermediate Outputs
 
-```sh
-pip install -r requirements.txt
-```
+### `iris_data_fe`
 
-Now you can run the project:
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Feature-engineered iris data |
 
-```sh
-kedro run
-```
+### `iris_data_norm`
 
-## Rules and guidelines
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Normalised iris data |
 
-In order to get the best out of the template:
+### `X_train`, `X_test`
 
-* Don't remove any lines from the `.gitignore` file we provide
-* Make sure your results can be reproduced by following a [data engineering convention](https://docs.kedro.org/en/stable/faq/faq.html#what-is-data-engineering-convention)
-* Don't commit data to your repository
-* Don't commit any credentials or your local configuration to your repository. Keep all your credentials and local configuration in `conf/local/`
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Train/test set features |
 
-## How to install dependencies
+### `y_train`, `y_test`
 
-Declare any dependencies in `requirements.txt` for `pip` installation.
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Train/test set targets |
 
-To install them, run:
+### `model`
 
-```
-pip install -r requirements.txt
-```
+|      |                    |
+| ---- | ------------------ |
+| Type | `sklearn.base.BaseEstimator` |
+| Description | Trained scikit-learn model |
 
-## How to run your Kedro pipeline
+### `y_pred`
 
-You can run your Kedro project with:
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Model predictions on test set |
 
-```
-kedro run
-```
+### `accuracy`
 
-## How to test your Kedro project
+|      |                    |
+| ---- | ------------------ |
+| Type | `float` |
+| Description | Model accuracy on test set |
 
-Have a look at the file `src/tests/test_run.py` for instructions on how to write your tests. You can run your tests as follows:
+### `drift_report`
 
-```
-pytest
-```
+|      |                    |
+| ---- | ------------------ |
+| Type | `dict` |
+| Description | Data drift statistics between train and test sets |
 
-To configure the coverage threshold, look at the `.coveragerc` file.
+## Experiment Tracking
 
-## Project dependencies
+- **MLflow:** Tracks parameters, metrics, and model artifacts.  
+  Start the UI with `mlflow ui` and visit [http://localhost:5000](http://localhost:5000).
+- **Weights & Biases (W&B):** Tracks parameters, metrics, curves, and model/data artifacts.  
+  View your runs at [https://wandb.ai/](https://wandb.ai/) under your project.
 
-To see and update the dependency requirements for your project use `requirements.txt`. You can install the project requirements with `pip install -r requirements.txt`.
+## Modular Pipelines
 
-[Further information about project dependencies](https://docs.kedro.org/en/stable/kedro_project_setup/dependencies.html#project-specific-dependencies)
+- `feature_engineering`
+- `data_processing`
+- `training`
+- `reporting`
+- `monitoring`
+- `retraining`
 
-## How to work with Kedro and notebooks
+Each pipeline is defined in its own folder under `src/iris_classifier/pipelines/`.
 
-> Note: Using `kedro jupyter` or `kedro ipython` to run your notebook provides these variables in scope: `catalog`, `context`, `pipelines` and `session`.
->
-> Jupyter, JupyterLab, and IPython are already included in the project requirements by default, so once you have run `pip install -r requirements.txt` you will not need to take any extra steps before you use them.
+## How to Run
 
-### Jupyter
-To use Jupyter notebooks in your Kedro project, you need to install Jupyter:
+1. Install dependencies:  
+   `pip install -r requirements.txt`
+2. Run the pipeline:  
+   `kedro run`
+3. View experiment tracking dashboards in MLflow and W&B.
 
-```
-pip install jupyter
-```
+## Notes
 
-After installing Jupyter, you can start a local notebook server:
+- All code uses pandas and numpy (no Spark).
+- Modular structure demonstrates best practices for scalable ML projects.
+- Easily extendable for more complex models and data.
 
-```
-kedro jupyter notebook
-```
+```# Iris Classifier Pipeline
 
-### JupyterLab
-To use JupyterLab, you need to install it:
+> *Note:* This project is an example of MLOps best practices using Kedro 1.x, demonstrating modular pipeline design and experiment tracking to follow key MLOps stages.
 
-```
-pip install jupyterlab
-```
+## Overview
 
-You can also start JupyterLab:
+This pipeline demonstrates a modular and reproducible machine learning workflow, following MLOps principles:
 
-```
-kedro jupyter lab
-```
+1. **Feature Engineering:** Create and transform features (e.g., feature interactions, normalization).
+2. **Data Processing:** Split the data into training and testing sets using a configurable ratio from `conf/base/parameters.yml`.
+3. **Training:** Fit a logistic regression model using scikit-learn, logging parameters and metrics to MLflow and Weights & Biases (W&B).
+4. **Reporting:** Report model accuracy and log performance curves.
+5. **Monitoring:** Monitor data drift and statistics between train and test sets.
+6. **Retraining:** Optionally retrain the model with new data.
 
-### IPython
-And if you want to run an IPython session:
+## Pipeline Inputs
 
-```
-kedro ipython
-```
+### `iris_data`
 
-### How to ignore notebook output cells in `git`
-To automatically strip out all output cell contents before committing to `git`, you can run `kedro activate-nbstripout`. This will add a hook in `.git/config` which will run `nbstripout` before anything is committed to `git`.
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Raw iris data containing features and target column |
 
-> *Note:* Your output cells will be retained locally.
+### `parameters`
 
-## Package your Kedro project
+|      |                    |
+| ---- | ------------------ |
+| Type | `dict` |
+| Description | Project parameters: `train_fraction`, `random_state`, `target_column`, `n_epochs` |
 
-[Further information about building project documentation and packaging your project](https://docs.kedro.org/en/stable/tutorial/package_a_project.html)
+## Pipeline Intermediate Outputs
+
+### `iris_data_fe`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Feature-engineered iris data |
+
+### `iris_data_norm`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Normalised iris data |
+
+### `X_train`, `X_test`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Train/test set features |
+
+### `y_train`, `y_test`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Train/test set targets |
+
+### `model`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `sklearn.base.BaseEstimator` |
+| Description | Trained scikit-learn model |
+
+### `y_pred`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `pandas.DataFrame` |
+| Description | Model predictions on test set |
+
+### `accuracy`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `float` |
+| Description | Model accuracy on test set |
+
+### `drift_report`
+
+|      |                    |
+| ---- | ------------------ |
+| Type | `dict` |
+| Description | Data drift statistics between train and test sets |
+
+## Experiment Tracking
+
+- **MLflow:** Tracks parameters, metrics, and model artifacts.  
+  Start the UI with `mlflow ui` and visit [http://localhost:5000](http://localhost:5000).
+- **Weights & Biases (W&B):** Tracks parameters, metrics, curves, and model/data artifacts.  
+  View your runs at [https://wandb.ai/](https://wandb.ai/) under your project.
+
+## Modular Pipelines
+
+- `feature_engineering`
+- `data_processing`
+- `training`
+- `reporting`
+- `monitoring`
+- `retraining`
+
+Each pipeline is defined in its own folder under `src/iris_classifier/pipelines/`.
+
+## How to Run
+
+1. Install dependencies:  
+   `pip install -r requirements.txt`
+2. Run the pipeline:  
+   `kedro run`
+3. View experiment tracking dashboards in MLflow and W&B.
+
+## Notes
+
+- All code uses pandas and numpy (no Spark).
+- Modular structure demonstrates best practices for scalable ML projects.
+- Easily extendable for more complex models and data.

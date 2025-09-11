@@ -1,72 +1,166 @@
-# Pipeline
+# Iris Classifier Pipeline
 
-> *Note:* This is a `README.md` boilerplate generated using `Kedro 0.19.8`.
+> *Note:* This project is an example of MLOps best practices using Kedro 1.x, demonstrating modular pipeline design and experiment tracking to follow key MLOps stages.
 
-## Overview
+---
 
-[Transcoding](https://docs.kedro.org/en/stable/data/data_catalog_yaml_examples.html#read-the-same-file-using-two-different-datasets) is used to convert the Spark DataFrames into pandas DataFrames after splitting the data into training and testing sets.
+## 📌 Overview
 
-This pipeline:
-1. splits the data into training dataset and testing dataset using a configurable ratio found in `conf/base/parameters.yml`
-2. runs a simple 1-nearest neighbour model (`make_prediction` node) and makes prediction dataset
-3. reports the model accuracy on a test set (`report_accuracy` node)
+This pipeline demonstrates a modular and reproducible machine learning workflow using the Iris dataset, following MLOps principles:
 
-## Pipeline inputs
+1. **Feature Engineering** – Create and transform features (e.g., feature interactions, normalisation).
+2. **Data Processing** – Split the data into training and testing sets using parameters from `conf/base/parameters.yml`.
+3. **Training** – Fit a logistic regression model using scikit-learn, logging parameters and metrics to MLflow and optionally Weights & Biases (W&B).
+4. **Inference** – Run predictions on new or test data.
+5. **Monitoring** – Perform data drift analysis and summary statistics between training and inference data.
+6. **Retraining** – Retrain the model with new data if drift is detected or performance degrades.
 
-### `example_iris_data`
+---
 
-|      |                    |
-| ---- | ------------------ |
-| Type | `spark.SparkDataset` |
-| Description | Example iris data containing columns |
+## 🔁 Pipeline Inputs
 
+### `iris_data`
+
+| Field | Description |
+|-------|-------------|
+| Type  | `pandas.DataFrame` |
+| Description | Raw iris data containing features and target column |
 
 ### `parameters`
 
-|      |                    |
-| ---- | ------------------ |
-| Type | `dict` |
-| Description | Project parameter dictionary that must contain the following keys: `train_fraction` (the ratio used to determine the train-test split), `random_state` (random generator to ensure train-test split is deterministic) and `target_column` (identify the target column in the dataset) |
+| Field | Description |
+|-------|-------------|
+| Type  | `dict` |
+| Description | Pipeline configuration parameters such as `train_fraction`, `random_state`, `target_column`, and `n_epochs` |
 
+---
 
-## Pipeline intermediate outputs
+## 🔄 Intermediate Outputs
 
-### `X_train`
+### `iris_data_fe`
 
-|      |                    |
-| ---- | ------------------ |
-| Type | `pyspark.sql.DataFrame` |
-| Description | DataFrame containing train set features |
+| Field | Description |
+|-------|-------------|
+| Type  | `pandas.DataFrame` |
+| Description | Feature-engineered iris data |
 
-### `y_train`
+### `iris_data_norm`
 
-|      |                    |
-| ---- | ------------------ |
-| Type | `pyspark.sql.DataFrame` |
-| Description | Series containing train set target |
+| Field | Description |
+|-------|-------------|
+| Type  | `pandas.DataFrame` |
+| Description | Normalised iris data |
 
-### `X_test`
+### `X_train`, `X_test`
 
-|      |                    |
-| ---- | ------------------ |
-| Type | `pyspark.sql.DataFrame` |
-| Description | DataFrame containing test set features |
+| Field | Description |
+|-------|-------------|
+| Type  | `pandas.DataFrame` |
+| Description | Feature sets for training and inference |
 
-### `y_test`
+### `y_train`, `y_test`
 
-|      |                    |
-| ---- | ------------------ |
-| Type | `pyspark.sql.DataFrame` |
-| Description | Series containing test set target |
+| Field | Description |
+|-------|-------------|
+| Type  | `pandas.DataFrame` |
+| Description | Labels for training and evaluation |
+
+---
+
+## ✅ Final Outputs
+
+### `model`
+
+| Field | Description |
+|-------|-------------|
+| Type  | `sklearn.base.BaseEstimator` |
+| Description | Trained model artifact |
 
 ### `y_pred`
 
-|      |                    |
-| ---- | ------------------ |
-| Type | `pandas.Series` |
-| Description | Predictions from the 1-nearest neighbour model |
+| Field | Description |
+|-------|-------------|
+| Type  | `pandas.DataFrame` |
+| Description | Predicted class labels from inference pipeline |
 
+### `accuracy`
 
-## Pipeline outputs
+| Field | Description |
+|-------|-------------|
+| Type  | `float` |
+| Description | Model accuracy on test set (optional evaluation step) |
 
-### `None`
+### `drift_report`
+
+| Field | Description |
+|-------|-------------|
+| Type  | `dict` |
+| Description | Drift statistics comparing training vs inference inputs |
+
+---
+
+## 📊 Experiment Tracking
+
+- **MLflow** – Logs parameters, metrics, and model artifacts.  
+  Start with `mlflow ui` → [http://localhost:5000](http://localhost:5000)
+
+- **Weights & Biases (optional)** – Logs visual metrics and artifacts.  
+  View at [https://wandb.ai/](https://wandb.ai/) under your account/project.
+
+---
+
+## 🧩 Modular Pipelines
+
+Each stage is defined in a dedicated module under `src/iris_classifier/pipelines/`:
+
+- `feature_engineering`
+- `data_processing`
+- `training`
+- `inference`
+- `monitoring`
+- `retraining`
+
+---
+
+## 🚀 How to Run
+
+1. **Install dependencies**  
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run the full pipeline**  
+   ```bash
+   kedro run
+   ```
+
+3. **Run individual pipelines**  
+   ```bash
+   kedro run --pipeline inference
+   ```
+
+4. **Track experiments**  
+   ```bash
+   mlflow ui
+   ```
+
+---
+
+## 📝 Notes
+
+- All code uses `pandas`, `numpy`, and `scikit-learn`.
+- Kedro modular structure supports team collaboration and scaling.
+- Inference logic is isolated and reusable across retraining or batch scoring.
+
+---
+
+## 📂 Outputs
+
+| File                    | Description                   |
+|-------------------------|-------------------------------|
+| `model.pkl`             | Trained model artifact        |
+| `y_pred.csv`            | Inference results             |
+| `drift_report.csv`      | Tabular drift summary         |
+| `drift_bar.png`         | Visual drift chart            |
+| `model_partitions/`     | Timestamped outputs by run    |
+

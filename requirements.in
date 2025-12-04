@@ -1,0 +1,11 @@
+kedro
+kedro-datasets
+kedro-datasets[pickle]
+numpy
+pandas
+pytest
+kedro-viz
+matplotlib
+mlflow
+protobuf>=5.26.1,<6.0dev
+wandb
